@@ -1,0 +1,1 @@
+This is just a simple tool I built to put photos I've taken into dated folders.
