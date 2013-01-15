@@ -9,9 +9,9 @@ using System.Windows.Forms;
 
 namespace PicturesIntoFolders
 {
-  public partial class Form1 : Form
+  public partial class PicturesIntoFoldersForm : Form
   {
-    public Form1()
+    public PicturesIntoFoldersForm()
     {
       InitializeComponent();
     }
@@ -23,7 +23,7 @@ namespace PicturesIntoFolders
       {
         if (string.IsNullOrEmpty(m_PicturesRootFolder))
         {
-          m_PicturesRootFolder = "C:\\Users\\kwreid\\Desktop\\TargetImageFolder\\"; // "getthisfromconfigfile";
+          m_PicturesRootFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);  // "C:\\Users\\kwreid\\Desktop\\TargetImageFolder\\"; // "getthisfromconfigfile";
         }
         return m_PicturesRootFolder;
       }
@@ -67,6 +67,7 @@ namespace PicturesIntoFolders
       }
 
       System.IO.File.Move(filename, targetFolderName + System.IO.Path.GetFileName(filename));
+      AddLogMessage("Moved '" + System.IO.Path.GetFileName(filename) + "' to '" + targetFolderName + "'");
     }
 
     private DateTime getDateFromImageFile(string FileName)
@@ -89,6 +90,34 @@ namespace PicturesIntoFolders
       }
 
       return DateTime.Parse(sdate);
+    }
+
+    private void AddLogMessage(string message)
+    {
+      m_LogTextbox.AppendText(message + Environment.NewLine);
+
+    }
+
+    private void m_DropTargetPanel_DragDrop(object sender, DragEventArgs e)
+    {
+      string[] FileNames = (string[])e.Data.GetData("FileDrop");
+
+      for (int i = 0; i < FileNames.Length; i++)
+      {
+        ProcessFile(FileNames[i]);
+      }
+    }
+
+    private void m_DropTargetPanel_DragEnter(object sender, DragEventArgs e)
+    {
+      if (e.Data.GetDataPresent("FileDrop"))
+      {
+        e.Effect = DragDropEffects.Copy;
+      }
+      else
+      {
+        e.Effect = DragDropEffects.None;
+      }
     }
   }
 }
