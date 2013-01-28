@@ -16,6 +16,8 @@ namespace PicturesIntoFolders
       InitializeComponent();
     }
 
+    // Note: See this great list of EXIF helper methods I got the following enum from:
+    //   http://blog.crazybeavers.se/index.php/archive/reading-exif-with-extension-methods/
     public enum PropertyTag
     {
       ImageWidth = 0x100,
