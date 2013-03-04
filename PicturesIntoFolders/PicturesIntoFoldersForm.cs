@@ -167,6 +167,7 @@ namespace PicturesIntoFolders
     private DateTime getDateFromImageFile(string FileName)
     {
       System.Drawing.Image img = null;
+      DateTime dt = new DateTime();
       string sdate = string.Empty;
 
       using (System.IO.FileStream stream = new System.IO.FileStream(FileName, System.IO.FileMode.Open, System.IO.FileAccess.Read))
@@ -188,18 +189,18 @@ namespace PicturesIntoFolders
         else
         {
           System.Diagnostics.Debug.Assert(false, "No date/time fields populated in image.");
-          return new DateTime();
         }
 
-        string secondhalf = sdate.Substring(sdate.IndexOf(" "), (sdate.Length - sdate.IndexOf(" ")));
+        if (!string.IsNullOrEmpty(sdate))
+        {
+          string secondhalf = sdate.Substring(sdate.IndexOf(" "), (sdate.Length - sdate.IndexOf(" ")));
+          string firsthalf = sdate.Substring(0, 10);
+          firsthalf = firsthalf.Replace(":", "-");
 
-        string firsthalf = sdate.Substring(0, 10);
-        firsthalf = firsthalf.Replace(":", "-");
-
-        sdate = firsthalf + secondhalf;
+          sdate = firsthalf + secondhalf;
+          dt = DateTime.Parse(sdate);
+        }
       }
-
-      return DateTime.Parse(sdate);
 
       // There are some cases where the date/time returned are actually bogus, and in those cases we'd perhaps want to grab the actual file "date modified"
       // property rather than the EXIF.
@@ -210,6 +211,13 @@ namespace PicturesIntoFolders
       // Possible rules to consider:
       //        Don't use the regular DateTime property at all?  Ignore it.  Don't use file date time in this case either since the camera has no date/time configuration.
       //        Watch out for date/time combinations where the time is 12:00 (exactly noon) and >1 year in the past.  If found, fall back to file date/time?
+      if ((DateTime.Now.Subtract(dt).Days)>(365 * 4))
+      {
+        // detected date is >4 years old.  Good chance the date is garbage.  Use File Modified date instead.
+        dt = System.IO.File.GetLastWriteTime(FileName);
+      }
+
+      return dt;
     }
 
     private void AddLogMessage(string message)
