@@ -99,6 +99,8 @@
       this.Controls.Add(this.m_SelectFilesButton);
       this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
       this.Name = "PicturesIntoFoldersForm";
+      this.ShowIcon = false;
+      this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
       this.Text = "Picture Mover";
       this.m_DropGroupBox.ResumeLayout(false);
       this.ResumeLayout(false);

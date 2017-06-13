@@ -149,7 +149,7 @@ namespace PicturesIntoFolders
       }
       catch (Exception e)
       {
-        System.Diagnostics.Debug.Assert(false, "Failure retreiving a valid date from image file: '" + e.Message + "\n\n" + e.StackTrace.ToString());
+        // System.Diagnostics.Debug.Assert(false, "Failure retreiving a valid date from image file: '" + e.Message + "\n\n" + e.StackTrace.ToString());
         dateFromImageFile = "[No Date]";
       }
 
@@ -160,8 +160,22 @@ namespace PicturesIntoFolders
         System.IO.Directory.CreateDirectory(targetFolderName);
       }
 
-      System.IO.File.Move(filename, targetFolderName + System.IO.Path.GetFileName(filename));
-      AddLogMessage("Moved '" + System.IO.Path.GetFileName(filename) + "' to '" + targetFolderName + "'");
+      if (System.IO.File.Exists(targetFolderName + System.IO.Path.GetFileName(filename)))
+      {
+        AddLogMessage("! File already exists '" + System.IO.Path.GetFileName(filename) + "'");
+        return;
+      }
+
+      try
+      {
+        System.IO.File.Move(filename, targetFolderName + System.IO.Path.GetFileName(filename));
+        AddLogMessage("Moved '" + System.IO.Path.GetFileName(filename) + "' to '" + targetFolderName + "'");
+      }
+      catch (System.Exception ex)
+      {
+        AddLogMessage("! Failed to move '" + System.IO.Path.GetFileName(filename) + "' because of '" + ex.Message);
+      }
+      
     }
 
     private DateTime getDateFromImageFile(string FileName)
@@ -188,7 +202,7 @@ namespace PicturesIntoFolders
         }
         else
         {
-          System.Diagnostics.Debug.Assert(false, "No date/time fields populated in image.");
+          System.Diagnostics.Debug.WriteLine(false, "No date/time fields populated in image.");
         }
 
         if (!string.IsNullOrEmpty(sdate))
