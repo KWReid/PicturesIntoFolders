@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.Text.RegularExpressions;
 
 namespace PicturesIntoFolders
 {
@@ -138,22 +139,64 @@ namespace PicturesIntoFolders
       }
     }
 
+    private string getDateFromFile(string filename)
+    {
+      string dateFromFile = string.Empty;
+
+      switch (System.IO.Path.GetExtension(filename))
+      {
+        case ".jpg":
+        case ".jpeg":
+          DateTime d = getDateFromImageFile(filename);
+          dateFromFile = d.ToString("yyyy-MM-dd");
+          break;
+        default:
+          dateFromFile = getDateFromFilename(filename);
+          break;
+      }
+
+      return dateFromFile;
+    }
+
+    // some examples I try to catch
+    // VID_20210802_105406.mp4
+    // PANO_20210725_151026.jpg
+    // IMG_20210717_180720.jpg
+    private string getDateFromFilename(string filename)
+    {
+      string dateFromFilename = string.Empty;
+
+      string filenameWithDate_pattern = "[a-zA-Z]{3,}_\\d{8}_.*\\.[a-zA-z]+";            // using https://regex101.com/
+      Match m = Regex.Match(filename, filenameWithDate_pattern, RegexOptions.IgnoreCase);
+      if (m.Success)
+      {
+        // grab the 8 digit YYYYMMDD string in the middle of the filename as date
+        string[] s = filename.Split('_');
+        dateFromFilename = s[1].Substring(0, 4) + "-" + s[1].Substring(4, 2) + "-" + s[1].Substring(6, 2);
+      }
+      else 
+      {
+        dateFromFilename = "[No Date]";
+      }
+      
+      return dateFromFilename;
+    }
+
     private void ProcessFile(string filename)
     {
-      string dateFromImageFile = string.Empty;
+      string dateFromFile = string.Empty;
 
       try
       {
-        DateTime d = getDateFromImageFile(filename);
-        dateFromImageFile = d.ToString("yyyy-MM-dd");
+        dateFromFile = getDateFromFile(filename);
       }
       catch (Exception e)
       {
         // System.Diagnostics.Debug.Assert(false, "Failure retreiving a valid date from image file: '" + e.Message + "\n\n" + e.StackTrace.ToString());
-        dateFromImageFile = "[No Date]";
+        dateFromFile = "[No Date]";
       }
 
-      string targetFolderName = PicturesRootFolder + "\\" + dateFromImageFile + "\\";
+      string targetFolderName = PicturesRootFolder + "\\" + dateFromFile + "\\";
 
       if (System.IO.Directory.Exists(targetFolderName) == false)
       {
@@ -175,7 +218,7 @@ namespace PicturesIntoFolders
       {
         AddLogMessage("! Failed to move '" + System.IO.Path.GetFileName(filename) + "' because of '" + ex.Message);
       }
-      
+
     }
 
     private DateTime getDateFromImageFile(string FileName)
@@ -191,7 +234,7 @@ namespace PicturesIntoFolders
         if (Array.IndexOf(img.PropertyIdList, (Int32)PropertyTag.DateTimeOriginal) > -1)
         {
           sdate = System.Text.Encoding.UTF8.GetString(img.GetPropertyItem((Int32)PropertyTag.DateTimeOriginal).Value).Trim();
-        } 
+        }
         else if (Array.IndexOf(img.PropertyIdList, (Int32)PropertyTag.DateTime) > -1)
         {
           sdate = System.Text.Encoding.UTF8.GetString(img.GetPropertyItem((Int32)PropertyTag.DateTime).Value).Trim();
@@ -225,7 +268,7 @@ namespace PicturesIntoFolders
       // Possible rules to consider:
       //        Don't use the regular DateTime property at all?  Ignore it.  Don't use file date time in this case either since the camera has no date/time configuration.
       //        Watch out for date/time combinations where the time is 12:00 (exactly noon) and >1 year in the past.  If found, fall back to file date/time?
-      if ((DateTime.Now.Subtract(dt).Days)>(365 * 4))
+      if ((DateTime.Now.Subtract(dt).Days) > (365 * 4))
       {
         // detected date is >4 years old.  Good chance the date is garbage.  Use File Modified date instead.
         dt = System.IO.File.GetLastWriteTime(FileName);
