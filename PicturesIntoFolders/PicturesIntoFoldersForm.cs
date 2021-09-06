@@ -143,7 +143,7 @@ namespace PicturesIntoFolders
     {
       string dateFromFile = string.Empty;
 
-      switch (System.IO.Path.GetExtension(filename))
+      switch (System.IO.Path.GetExtension(filename).ToLower())               
       {
         case ".jpg":
         case ".jpeg":
@@ -176,7 +176,8 @@ namespace PicturesIntoFolders
       }
       else 
       {
-        dateFromFilename = "[No Date]";
+        // try getting date from actual file modified date
+        dateFromFilename = System.IO.File.GetLastWriteTime(filename).ToString("yyyy-MM-dd");
       }
       
       return dateFromFilename;
@@ -257,8 +258,10 @@ namespace PicturesIntoFolders
           sdate = firsthalf + secondhalf;
           dt = DateTime.Parse(sdate);
         }
+        stream.Dispose();
+        img.Dispose();
       }
-
+      
       // There are some cases where the date/time returned are actually bogus, and in those cases we'd perhaps want to grab the actual file "date modified"
       // property rather than the EXIF.
       // Problem is, how to know when the date/time returned in EXIF is actually bogus?
@@ -268,9 +271,9 @@ namespace PicturesIntoFolders
       // Possible rules to consider:
       //        Don't use the regular DateTime property at all?  Ignore it.  Don't use file date time in this case either since the camera has no date/time configuration.
       //        Watch out for date/time combinations where the time is 12:00 (exactly noon) and >1 year in the past.  If found, fall back to file date/time?
-      if ((DateTime.Now.Subtract(dt).Days) > (365 * 4))
+      if ((DateTime.Now.Subtract(dt).Days) > (365 * 20))
       {
-        // detected date is >4 years old.  Good chance the date is garbage.  Use File Modified date instead.
+        // detected date is >20 years old.  Good chance the date is garbage.  Use File Modified date instead.
         dt = System.IO.File.GetLastWriteTime(FileName);
       }
 
